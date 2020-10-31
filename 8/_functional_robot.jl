@@ -28,8 +28,8 @@ HorizonSideRobots.show!() = show!(ROBOT)
 """
     movements!(move_act!::Function, move_condition::Function)
 
-Заставляет Робота делать шаги с помощью функции move_act! (возможно кроме собственно шага, делающей что-то еще), не имеющей аргуменов,
-до тех пор, пока логическая функция move_condition (тоже без аргументов) будет возвращать значение true
+Заставляет Робота делать шаги с помощью функции move_act!() 
+до тех пор, пока логическая функция move_condition() не вернет false
 """
 movements!(move_act!::Function, move_condition::Function) = while move_condition() move_act!()end
 
@@ -85,7 +85,6 @@ function snake!(move_fold!::Function, fold_direct::HorizonSide, general_direct::
 
     if move_fold!(fold_direct)==false return end 
     while to_next_fold!(general_direct)==true && move_fold!(fold_direct)==true end
-
 end
 
 inverse(side::HorizonSide) = HorizonSide(mod(Int(side)+2, 4))
