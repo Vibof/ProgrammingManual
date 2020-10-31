@@ -17,7 +17,7 @@ HorizonSideRobots.ismarker() = ismarker(ROBOT)
 HorizonSideRobots.temperature() = temperature(ROBOT)
 
 HorizonSideRobots.putmarker!() = putmarker!(ROBOT)
-HorizonSideRobots.move!(side) = move!(ROBOT,side)
+HorizonSideRobots.move!(side) = move!(ROBOT, side)
 
 HorizonSideRobots.show!() = show!(ROBOT) 
 #HorizonSideRobots.show() = show(ROBOT) - это все равно работать не будет, т.к. в Main имеется стандартная show()
@@ -26,32 +26,28 @@ HorizonSideRobots.show!() = show!(ROBOT)
 
 
 """
-    movements!(move!::Function, move_condition::Function)
+    movements!(move_act!::Function, move_condition::Function)
 
-Заставляет Робота делать шаги с помощью функции move (возможно кроме собственно шага, делающей что-то еще), не имеющей аргуменов,
+Заставляет Робота делать шаги с помощью функции move_act! (возможно кроме собственно шага, делающей что-то еще), не имеющей аргуменов,
 до тех пор, пока логическая функция move_condition (тоже без аргументов) будет возвращать значение true
 """
-movements!(move_act!::Function, move_condition::Function) =
-while move_condition()
-    move_act!()
-end
+movements!(move_act!::Function, move_condition::Function) = while move_condition() move_act!()end
 
 """
-    movements!(move!::Function, num_steps::Integer)
+    movements!(move_act!::Function, num_steps::Integer)
 
-Заставляет Робота делать шаги с помощью функции move (возможно кроме собственно шага, делающей что-то еще), не имеющей аргуменов,
-ровно num_steps раз
+Заставляет Робота делать шаги с помощью функции move_act!() ровно num_steps раз
 """
 movements!(move_act!::Function, num_steps::Integer) =
 for _ in 1:num_steps
     move_act!()
 end
 
-
 """
     get_num_movements!(move_condition::Function, side)
 
--- возвращает число сделанных Роботом шагов в направлении side до тех пор, пока move_condition()==true     
+Возвращает число сделанных Роботом шагов в направлении side до тех пор, пока move_condition()==true
+-- move_condition() - логическая функция, определяющая заданное условие      
 """
 function get_num_movements!(move_condition::Function, side)
     num_steps=0
@@ -61,67 +57,98 @@ end
 
 #---------------------------
 
-
 """
-    snake!(move_fold!::Function, fold_direct, general_direct)
+    snake!(move_fold!::Function, fold_direct::HorizonSide, general_direct::HorizonSide)
 
--- Осуществляет проход Роботом по рядам "змейкой"
--- Перемещение по каждой "складке змейк" осуществляется с помощью функции move_fold
--- fold_direct, general_direct - направления, определяющие направление перемещения по самой первой "складке" и направление перемещения от "складки" к "складке", соответственно
+Осуществляет проход Робота по рядам "змейкой" (в местах разворота возможны самоналожения траектории, и последняя складка может получиться полностью наложена на предыдущую)
+-- move_fold!(::HorizonSide) - функция, перемещающая Робота по очередной "складке змейки", и возвращающая логическое значение:
+если возвращает false, то  - это сигнал, чтобы движение "змейкой" было остановлено
+-- fold_direct - направление перемещения по (самой первой) "складке" 
+-- general_direct - направление перемещения от "складки" к "складке"
 """
-function snake!(move_fold!::Function, fold_direct, general_direct)
-    walk_rows!(
-        ()->move_fold!(fold_direct), # - это функция, перемещающая Робота по "складке"
-
-        ()->(                             # - это функция, перемещающая на следующую "складку", если возможно
-            fold_direct = inverse(fold_direct);
-            if !isborder(general_direct)
-                move!(general_direct)
-                return true
+function snake!(move_fold!::Function, fold_direct::HorizonSide, general_direct::HorizonSide)
+    function to_next_fold!(general_direct)                            # - функция, перемещающая на следующую "складку", если это возможно
+        prew_direct = fold_direct
+        fold_direct = inverse(fold_direct) # - внешняя переменная
+        while isborder(general_direct)
+            if !isborder(fold_direct)
+                move!(fold_direct)
             else
-                return false
+                return false # прохода в направлении general_direct нигде нет
             end
-        )
-    )
+        end
+        #УТВ: в направлении general_direct нет перегородки
+        move!(general_direct)
+        movements!(()->move!(prew_direct), ()->!isborder(prew_direct))
+        return true
+    end
+
+    if move_fold!(fold_direct)==false return end 
+    while to_next_fold!(general_direct)==true && move_fold!(fold_direct)==true end
+
 end
 
 inverse(side::HorizonSide) = HorizonSide(mod(Int(side)+2, 4))
 
-
 """
-    comb!(move_clove!::Function, fold_direct, general_direct)
+    comb!(there_and_back!::Function, clove_direct::HorizonSide, general_direct::HorizonSide)
 
--- Осуществляет проход Роботом по рядам "расческой"
--- Перемещение по каждому "зубчику расчески" от его начала до конца и обрантно осуществляется с помощью функции move_clove!
--- fold_direct, general_direct - направления, определяющие направление перемещения по самому первому "зубчику" и направление перемещения от "зубчика" к "зубчику", соответственно
+-- Осуществляет проход Роботом по рядам "гребенкой"
+-- there_and_back!(::HorizonSide) - функция, перемещающая Робота по очередному "зубчику гребёнки", от его начала до конца и обрантно, и 
+возвращающая логическое значение: если возвращает false, то  - это сигнал, чтобы движение "гребенкой" было остановлено
+-- clove_direct - направления, определяющие направление перемещения по самому первому "зубчику"
+-- general_direct - направление перемещения от "зубчика" к "зубчику"
 """
-function comb!(move_clove!::Function, clove_direct, general_direct)
-    walk_rows!(
-        ()->move_clove!(clove_direct), # функция, перемещающая Робота по "по зубчику и обратно"
+function comb!(there_and_back!::Function, clove_direct::HorizonSide, general_direct::HorizonSide)
+    function to_next_clove(general_direct)
+        if !isborder(general_direct)
+            move!(general_direct)
+            return true
+        else
+            return false
+        end
+    end
 
-        ()->(
-            if !isborder(general_direct)
-                move(general_direct)
-                return true
-            else
+    there_and_back!(clove_direct)
+    while to_next_clove(general_direct) && there_and_back!(clove_direct) end
+end
+
+#------------------ 
+"""
+    spiral!(move_act!::Function)
+
+Перемещает Робота по раскручивающейся в положительном направлении спирали (первый шаг - на север) до момента наступления 
+некотрого события, определяемого функцией move_act!(::HorizonSide)
+-- move_act!(::HorizonSide) - функция перемещающая Робота в заданном направлении на 1 шаг (и, возможно, делающая что-то еще), и
+возвращая логическое значение: если возвращается false, то - это сигнал, чтобы движение "змейкой" было остановлено.
+"""
+function spiral!(move_act!::Function)
+    function next_round!(side, max_num_steps::Integer)     
+    # - на очереном витке увеличивает длину сегмента спирали
+        if side in (Sud, Nord) 
+            max_num_steps+=1 
+        end 
+    end
+    
+    function move_direct!(move_act!::Function, side, max_num_steps::Integer)
+    # перемещает Робота в заданном направлении не более чем на max_num_steps шагов с помощью функции move_act!(side) 
+        num_steps=0
+        while (num_steps <= max_num_steps) 
+            if move_act!(side) == false
                 return false
             end
-        ) # функция, перемещающая на следующий "зубчик", если возможно
-    )
-end
+            num_steps+=1
+        end         
+        return true
+    end
 
-
-"""
-    walk_rows!(move_row!::Function, nextrow_ifposible!::Function)
-
- -- перемещает Робота по "соседним" рядам
- -- move_row! - функция без аргументов, перемещающая Робота по одному ряду
- -- nextrow_ifposible! - логическая функция без аргументов, перемещающая Робота в следующий ряд, если это возможно
- (возвращает true, если перемщение состоялось, и false - в противном случае)
-"""
-function walk_rows!(move_row!::Function, nextrow_ifposible!::Function)
-    move_row!()
-    while nextrow_ifposible!()
-        move_row!()
+    side = Nord
+    max_num_steps = 1
+    
+    while move_direct!(move_act!, side, max_num_steps) == true 
+        max_num_steps = next_round!(side, max_num_steps) 
+        side=left(side)
     end
 end
+
+left(side::HorisonSide) = HorizonSide(mod(side(Int)+1, 4))
