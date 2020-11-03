@@ -1,7 +1,5 @@
 module FunctionalRobot
-    export move!, isborder, putmarker!, ismarker, temperature, show!,
-            movements!, get_num_movements!, 
-            snake!, comb!, spiral!
+    export set_situation!, move!, isborder, putmarker!, ismarker, temperature, show! #, save
             
     include("_functional_robot.jl")
 end
