@@ -18,11 +18,12 @@ end
 
 Перемещает Робота в заданном направлении на заданное количество шагов, выполняя после каждого шага функцию action!()
 """
-movements!(action!::Function, side, num_steps::Integer) =
-for _ in 1:num_steps
+movements!(action!::Function, side, num_steps::Integer) = 
+for _ in 1:num_steps       
     move!(side)
     action!()
 end
+
 #--------------------------------
 
 """
@@ -43,7 +44,7 @@ end
 movements!(action!::Function, side)=
 while !isborder(side)
     move!(side)
-    avtion()
+    action!()
 end
 
 #-----------------------------------

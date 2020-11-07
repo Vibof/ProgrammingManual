@@ -1,6 +1,6 @@
 """
 Модуль MovementsRobot расширяет стандартный командный интерфес Робота:
-    move!(side), isborder(side), putmarker!(), ismarker(), temperature(), show!()
+    move!(side), isborder(side), putmarker!(), ismarker(), temperature(), show!(), set_situation(sit_file),
 наследуемый от модуля FunctionalRobot, новыми функциями:
     movements!(side)
     get_num_movements!(side)
@@ -11,7 +11,8 @@
 """
 module MovementsRobot
 
-    export move!, isborder, putmarker!, ismarker, temperature, show!, movements!, get_num_movements! 
+    export move!, isborder, putmarker!, ismarker, temperature, show!, movements!, get_num_movements!,
+    set_situation! 
 
     include("FunctionalRobot.jl")
     using .FunctionalRobot

@@ -4,6 +4,8 @@
 - это часть командного интерфейса Робота
 =#
 
+using HorizonSideRobots
+
 """
 snake!(move_fold!::Function, fold_direct::HorizonSide, general_direct::HorizonSide)
 
@@ -13,10 +15,40 @@ snake!(move_fold!::Function, fold_direct::HorizonSide, general_direct::HorizonSi
 -- fold_direct - направление перемещения по (самой первой) "складке" 
 -- general_direct - направление перемещения от "складки" к "складке"
 """
+
 function snake!(move_fold!::Function, fold_direct::HorizonSide, general_direct::HorizonSide)
-    function to_next_fold!(general_direct) # - функция, перемещающая на следующую "складку", если это возможно
+    if move_fold!(fold_direct)==false 
+        return 
+    end 
+    
+    while !isborder(general_direct)
+        move!(general_direct) 
+        fold_direct = inverse(fold_direct)
+        if move_fold!(fold_direct)==false 
+            return
+        end
+    end
+end
+
+
+"""
+labirint_snake!(move_fold!::Function, fold_direct::HorizonSide, general_direct::HorizonSide)
+
+Осуществляет проход Робота по рядам простого лабиринта "змейкой". 
+Под простым лабиринтом понимается лабиринт который пересекается горизонтальными пярмыми ровно два раза. 
+При этом в местах разворота возможны самоналожения траектории (последняя складка будет получиться полностью наложеннной на предыдущую),
+но функция move_fold! отвечает только за одноразовый проход по складке (самоналожения могут возникать только при попытках перемещения на новую склажку).
+-- move_fold!(::HorizonSide) - функция, перемещающая Робота по очередной "складке змейки", и возвращающая логическое значение:
+если возвращает false, то  - это сигнал, чтобы движение "змейкой" было остановлено
+-- fold_direct - направление перемещения по (самой первой) "складке" 
+-- general_direct - направление перемещения от "складки" к "складке"
+"""
+function labirint_snake!(move_fold!::Function, fold_direct::HorizonSide, general_direct::HorizonSide)
+  
+    function to_next_fold!(general_direct)::Bool 
+    # перемещающает Робота в начало следующей "складки", если это возможно
         prew_direct = fold_direct
-        fold_direct = inverse(fold_direct) # - внешняя переменная
+        fold_direct = inverse(fold_direct) # - внешняя переменная     
         while isborder(general_direct)
             if !isborder(fold_direct)
                 move!(fold_direct)
@@ -35,10 +67,12 @@ function snake!(move_fold!::Function, fold_direct::HorizonSide, general_direct::
     if move_fold!(fold_direct)==false 
         return 
     end 
-    
-    while to_next_fold!(general_direct)==true && move_fold!(fold_direct)==true 
-    end
 
+    while to_next_fold!(general_direct)==true
+        if move_fold!(fold_direct)==false
+            return
+        end
+    end
 end
 
 #inverse(side::HorizonSide) = HorizonSide(mod(Int(side)+2, 4))
@@ -73,7 +107,7 @@ spiral!(move_act!::Function)
 
 Перемещает Робота по раскручивающейся в положительном направлении спирали (первый шаг - на север) до момента наступления 
 некотрого события, определяемого функцией move_act!(::HorizonSide)
--- move_act!(::HorizonSide) - функция перемещающая Робота в заданном направлении на 1 шаг (и, возможно, делающая что-то еще), и
+-- move_act!(::HorizonSide)::Bool - функция перемещающая Робота в заданном направлении на 1 шаг (и, возможно, делающая что-то еще), и
 возвращая логическое значение: если возвращается false, то - это сигнал, чтобы движение "змейкой" было остановлено.
 """
 function spiral!(move_act!::Function)
