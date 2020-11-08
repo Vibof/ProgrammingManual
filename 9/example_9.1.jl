@@ -34,4 +34,4 @@ using .MarkersCounter
 
 MarkersCounter.set_situation!("9/example_9.1.sit")
 MarkersCounter.markers_counter!() |> println
-show!()
+MarkersCounter.show!()
