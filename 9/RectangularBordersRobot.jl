@@ -16,80 +16,24 @@
         get_num_movements!(side)
         get_num_movements!(action!::Function, side)
 
-    -- унаследованные от модуля MovementsRobot (фактически от - FunctionalRobot):
+    -- унаследованные от модуля TrajectotiesRobot:
         set_situation!(file_name)
         isborder(side) 
         putmarker!()
         ismarker()
         temperature() 
         show!()  
+
+        snake!(move_fold!::Function, fold_direct::HorizonSide, general_direct::HorizonSide)      - обеспечивает перемещение "змейкой" 
+        labirint_snake!(move_fold!::Function, fold_direct::HorizonSide, general_direct::HorizonSide) - обеспечивает перемещение "змейкой" по простому лабиринту
+        comb!(there_and_back!::Function, clove_direct::HorizonSide, general_direct::HorizonSide) - обеспечивает перемещение по "гребенке"
+        spiral!(move_act!::Function)                                                             - обеспечивает перемещение по спирали    
+
 """
 module RectangularBordersRobot
-    export move!, movements!, get_num_movements!, isborder, putmarker!, ismarker, temperature, show!, set_situation!
-       
-    include("MovementsRobot.jl")
-    using .MovementsRobot
-
-    include("_rectangular_borders_move.jl")
-    # - здесь переопределена функция move!(::Any) из модуля FunctionalRobot
-
-    include("_movements_robot.jl")
-    # - здесь вставлены контекстно зависимые функции, которые теперь определены в сформированном выше контексте 
-    
-    """
-        movements!(side)
-
-    Перемещает Робота пока возможно сделать шаг в заданном направлении (пока Робот не упрется во внешнюю рамку)
-    и после каждого шага Робота выполняет action() 
-    (если Робот уприрается в прямугольную перегородку то величина одного шага может составить несколько клеток)
-    """
-    movements!(side) = 
-    while move!(side)==true 
-    end
-
-    """
-        movements!(action::Function, side)
-
-    Перемещает Робота пока возможно сделать шаг в заданном направлении (пока Робот не упрется во внешнюю рамку)
-    и после каждого шага Робота выполняет action() 
-    (если Робот уприрается в прямугольную перегородку то величина одного шага может составить несколько клеток)
-    """
-    movements!(action::Function, side) = 
-    while move!(side)==true
-        action()
-    end
-
-    #----
-
-    """
-        get_num_movements!(side)
-
-    Перемещает Робота пока возможно сделать шаг в заданном направлении (пока Робот не упрется во внешнюю рамку), 
-    и возвращает число сделанных шагов 
-    (если Робот уприрается в прямугольную перегородку то величина одного шага может составить несколько клеток)
-    """
-    function get_num_movements!(side)
-        num_steps=0
-        while move!(side)==true
-            num_steps+=1
-        end
-        return num_steps
-    end
-
-    """
-    get_num_movements!(side)
-
-    Перемещает Робота пока возможно сделать шаг в заданном направлении (пока Робот не упрется во внешнюю рамку)
-    и после каждого шага Робота выполняет action(), и возвращает число сделанных шагов 
-    (если Робот уприрается в прямугольную перегородку то величина одного шага может составить несколько клеток)
-    """
-    function get_num_movements!(action::Function, side)
-        num_steps=0
-        while move!(side)==true
-            action()
-            num_steps+=1
-        end
-        return num_steps
-    end
-
+    export move!, movements!, get_num_movements!, isborder, putmarker!, ismarker, temperature, show!, 
+    set_situation!, snake!,labirint_snake!, comb!, spiral!
+        
+    include("_rectangular_borders_robot.jl")
+    # - здесь переопределена функция move!(::Any) в контексте импортированного модуля MovementsRobot
  end
