@@ -21,7 +21,7 @@ right(side::HorizonSide)
 
 -- возвращает сторону горизонта, предшествующую заданной (в положительном направлении вращения)
 """
-right(side::HorizonSide) = HorizonSide(mod(Int(side)+1, 4))
+right(side::HorizonSide) = HorizonSide(mod(Int(side)-1, 4))
 
 
 """

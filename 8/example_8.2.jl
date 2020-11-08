@@ -26,4 +26,4 @@ using .MarkersCounter
 
 MarkersCounter.set_situation!("8/example_8.2.sit")
 MarkersCounter.markers_counter!() |> println
-show!()
+MarkersCounter.show!()
