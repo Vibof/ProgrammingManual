@@ -1,39 +1,38 @@
 """
-Модуль  FindMarker экспортирует функции
-    find_marker!, show!, set_situation!
-
+Модуль  FindMarker экспортирует функцию find_marker!
+осуществляющей поиск маркера на неограниченном поле при возможном наличии на нём перегородок в виде отрезков
 """
 module FindMarker
-    export find_marker!, show!, set_situation!
+    export find_marker!
 
-    include("RectangularBordersRobot.jl")
-    using .RectangularBordersRobot
+    using HorizonSideRobots
+    include("../8/horizonside.jl")
+    include("functional_robot.jl")
 
-    function move_action!(side)::Bool
-        if ismarker()
-            return false
-        end
-        move!(side)
-        return true
-    end
 
     """
     find_marker!()
 
     перемещает Робота, находящегося где-то на неораниченном поле без внутренних перегородок, в клетку с маркером        
     """
-    find_marker!() = spiral!(move_action!)
+    function find_marker!(robot)
+        robot = interface_protected_robot(robot)
+        rectangular_borders = interface_rectangular_borders(robot)
+
+        function move_ifnomarker!(side)::Bool
+            if robot.ismarker()
+                return false
+            end
+            rectangular_borders.move!(side) # - return true
+        end
+        
+        trajectories = interface_trajectories(robot)
+        trajectories.spiral!(move_ifnomarker!)
+    end
 end
 
 # ------- Исполняемая часть файла
-
+using HorizonSideRobots
 using .FindMarker
-FindMarker.set_situation!("9/example_9.2.sit")
-FindMarker.find_marker!()
-FindMarker.show!()
-
-#=
-ВНИМАНИЕ!!!: если здесь не использовать префикс "FindMarker.", 
-то при первом запуске файла все будет работать хорошо, но при последующих запусках, 
-поскольку модуль FindMarker при этом будет импортироваться повторно, возникнут связанные с этим проблемы 
-=#
+robot = Robot("9/example_9.2.sit"; animate=true)
+FindMarker.find_marker!(robot)

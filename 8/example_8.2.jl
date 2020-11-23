@@ -1,29 +1,34 @@
 module MarkersCounter
+    export markers_counter!
 
-include("TrajectoriesRobot.jl")
-using .TrajectoriesRobot
-using HorizonSideRobots
+    using HorizonSideRobots
+    include("horizonside.jl")
+    include("functional_robot.jl")
 
-function markers_counter!()
-    # Робот - в юго-западном углу
+    function markers_counter!(robot)
+        # Робот - в юго-западном углу
+        robot = interface_protected_robot(robot)
+        line = interface_line(robot.move!)
+        trajectories = interface_trajectories(robot)
 
-    counter() = if ismarker() num_markers+=1 end
-    
-    num_markers = 0
-    labirint_snake!(Ost, Nord) do side
-        counter()
-        movements!(counter, side)
-        return true
+        counter() = if robot.ismarker() num_markers+=1 end
+        
+        num_markers = 0
+        trajectories.labirint_snake!(Ost, Nord) do side
+            counter()
+            line.movements!(counter, side)
+            return true
+        end
+
+        return num_markers
     end
 
-    return num_markers
-end
+end # module MarkersCounter
 
-end
 #-------------------------- Исполняемая часть файла
 
+using HorizonSideRobots
 using .MarkersCounter
 
-MarkersCounter.set_situation!("8/example_8.2.sit")
-MarkersCounter.markers_counter!() |> println
-MarkersCounter.show!()
+robot = Robot("8/example_8.2.sit", animate=true)
+MarkersCounter.markers_counter!(robot) |> println
