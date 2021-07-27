@@ -2,7 +2,7 @@
 #include("horizonside.jl")
 
 """
-interface_save_robot(robot)
+interface_protected_robot(robot)
 
 Возвращает кортеж замыканий переменной robot, содержащий функции:
 (
@@ -15,7 +15,7 @@ interface_save_robot(robot)
     set_situation! = (sitfile)->sitedit!(robot, sitfile)  
 )   
 """
-interface_save_robot(robot) = (
+interface_protected_robot(robot) = (
     move! = (side)->(isborder(robot,side) ? false : (move!(robot,side);true)),
     isborder = (side)->isborder(robot,side),
     putmarker! = ()->putmarker!(robot),
